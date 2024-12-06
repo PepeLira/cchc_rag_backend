@@ -1,17 +1,159 @@
-# CCHC RAG
-El desarrollo de un sistema de Recuperación Aumentada por Generación (RAG) para la Cámara Chilena de la Construcción (CCHC). Buscando innovar en la forma en que se accede y se comprende la información técnica y normativa en el sector de la construcción chileno.
+# cchc-rag
 
-### Objetivos Principales
+## Features
 
-- **Gestión de Conocimiento:** Implementación de un sistema avanzado que permite procesar y analizar grandes volúmenes de documentación técnica.
-- **Accesibilidad:** Desarrollo de una interfaz a través de WhatsApp para facilitar el acceso a la información desde cualquier dispositivo.
-- **Precisión en Respuestas:** Utilización de tecnologías de IA para proporcionar respuestas contextualizadas basadas en la documentación oficial.
+- **FastAPI** with Python 3.8
+- **React 16** with Typescript, Redux, and react-router
+- Postgres
+- SqlAlchemy with Alembic for migrations
+- Pytest for backend tests
+- Jest for frontend tests
+- Perttier/Eslint (with Airbnb style guide)
+- Docker compose for easier development
+- Nginx as a reverse proxy to allow backend and frontend on the same port
 
-### Componentes del Sistema
+## Development
 
-- **Backend Inteligente:** Sistema de procesamiento que utiliza modelos de lenguaje avanzados para la comprensión y generación de respuestas.
-- **Interfaz WhatsApp:** Canal de comunicación principal que permite a los usuarios realizar consultas de manera intuitiva y familiar.
-- **Base de Datos Vectorial:** Sistema de almacenamiento optimizado para la búsqueda semántica de información.
+The only dependencies for this project should be docker and docker-compose.
 
-Este proyecto representa una innovación significativa en la gestión de información técnica del sector construcción, con un enfoque en la usabilidad, precisión y eficiencia en la entrega de información.
- 
+### Quick Start
+
+Starting the project with hot-reloading enabled
+(the first time it will take a while):
+
+```bash
+docker-compose up -d
+```
+
+To run the alembic migrations (for the users table):
+
+```bash
+docker-compose run --rm backend alembic upgrade head
+```
+
+And navigate to http://localhost:8000
+
+_Note: If you see an Nginx error at first with a `502: Bad Gateway` page, you may have to wait for webpack to build the development server (the nginx container builds much more quickly)._
+
+Auto-generated docs will be at
+http://localhost:8000/api/docs
+
+### Rebuilding containers:
+
+```
+docker-compose build
+```
+
+### Restarting containers:
+
+```
+docker-compose restart
+```
+
+### Bringing containers down:
+
+```
+docker-compose down
+```
+
+### Frontend Development
+
+Alternatively to running inside docker, it can sometimes be easier
+to use npm directly for quicker reloading. To run using npm:
+
+```
+cd frontend
+npm install
+npm start
+```
+
+This should redirect you to http://localhost:3000
+
+### Frontend Tests
+
+```
+cd frontend
+npm install
+npm test
+```
+
+## Migrations
+
+Migrations are run using alembic. To run all migrations:
+
+```
+docker-compose run --rm backend alembic upgrade head
+```
+
+To create a new migration:
+
+```
+alembic revision -m "create users table"
+```
+
+And fill in `upgrade` and `downgrade` methods. For more information see
+[Alembic's official documentation](https://alembic.sqlalchemy.org/en/latest/tutorial.html#create-a-migration-script).
+
+## Testing
+
+There is a helper script for both frontend and backend tests:
+
+```
+./scripts/test.sh
+```
+
+### Backend Tests
+
+```
+docker-compose run backend pytest
+```
+
+any arguments to pytest can also be passed after this command
+
+### Frontend Tests
+
+```
+docker-compose run frontend test
+```
+
+This is the same as running npm test from within the frontend directory
+
+## Logging
+
+```
+docker-compose logs
+```
+
+Or for a specific service:
+
+```
+docker-compose logs -f name_of_service # frontend|backend|db
+```
+
+## Project Layout
+
+```
+backend
+└── app
+    ├── alembic
+    │   └── versions # where migrations are located
+    ├── api
+    │   └── api_v1
+    │       └── endpoints
+    ├── core    # config
+    ├── db      # db models
+    ├── tests   # pytest
+    └── main.py # entrypoint to backend
+
+frontend
+└── public
+└── src
+    ├── components
+    │   └── Home.tsx
+    ├── config
+    │   └── index.tsx   # constants
+    ├── __tests__
+    │   └── test_home.tsx
+    ├── index.tsx   # entrypoint
+    └── App.tsx     # handles routing
+```
