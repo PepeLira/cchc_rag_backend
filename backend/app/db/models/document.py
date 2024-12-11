@@ -13,5 +13,5 @@ class Document(Base):
     pages = Column(Integer, index=True)
     s3_url = Column(String, index=True)
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship("User", back_populates="document")
+    user = relationship("User", back_populates="documents")
     tags = relationship("DocumentTags", back_populates="document")
