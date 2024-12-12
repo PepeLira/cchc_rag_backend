@@ -1,6 +1,7 @@
 import os
 import importlib
 import inspect
+from app.db.session import Base
 
 # Get the current package name
 package_name = __name__

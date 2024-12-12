@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -17,3 +17,4 @@ class Document(Base):
     tags = relationship("DocumentTags", back_populates="document")
     uploaded_at = Column(DateTime, index=True)
     updated_at = Column(DateTime, index=True)
+    is_up_to_date = Column(Boolean, default=True)

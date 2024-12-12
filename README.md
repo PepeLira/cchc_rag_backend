@@ -88,7 +88,7 @@ docker compose run --rm backend alembic upgrade head
 To create a new migration:
 
 ```
-alembic revision -m "create users table"
+alembic revision --autogenerate -m "create users table"
 ```
 
 And fill in `upgrade` and `downgrade` methods. For more information see
