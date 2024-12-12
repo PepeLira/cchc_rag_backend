@@ -1,25 +1,23 @@
+import os
 import importlib
-import pkgutil
 import inspect
 
-def import_all_modules_and_get_classes(package_name):
-    package = importlib.import_module(package_name)
-    classes = {}
-    
-    # Import all modules and get classes
-    for _, module_name, _ in pkgutil.iter_modules(package.__path__):
-        module = importlib.import_module(f"{package_name}.{module_name}")
+# Get the current package name
+package_name = __name__
+
+# Initialize the __all__ list
+__all__ = []
+
+# Iterate over all files in the package directory
+package_dir = os.path.dirname(__file__)
+for filename in os.listdir(package_dir):
+    if filename.endswith('.py') and filename != '__init__.py':
+        module_name = filename[:-3]
+        module = importlib.import_module(f'.{module_name}', package_name)
         
-        # Get all classes in the module
+        # Inspect the module to find all classes
         for name, obj in inspect.getmembers(module, inspect.isclass):
             # Ensure the class is defined in the module (not imported)
             if obj.__module__ == module.__name__:
-                classes[name] = obj
-    
-    return classes
-
-# Import all modules in the current package and get all classes
-all_classes = import_all_modules_and_get_classes(__name__)
-
-# Optionally, you can make the classes available at the package level
-globals().update(all_classes)
+                globals()[name] = obj
+                __all__.append(name)

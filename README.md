@@ -109,7 +109,7 @@ python -m app.console
 
 In the console we can call for the models:
 ```
-session.query(models.user.User).all()
+session.query(models.User).all()
 ```
 
 ## Testing
