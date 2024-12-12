@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
-from app.db.models_group import Base
+from app.db.session import Base
 
 class Document(Base):
     __tablename__ = "document"
@@ -15,3 +15,5 @@ class Document(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship("User", back_populates="documents")
     tags = relationship("DocumentTags", back_populates="document")
+    uploaded_at = Column(DateTime, index=True)
+    updated_at = Column(DateTime, index=True)
