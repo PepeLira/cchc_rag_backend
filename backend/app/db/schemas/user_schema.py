@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 import typing as t
-
+from app.db.models import Document
 
 class UserBase(BaseModel):
     email: str
@@ -8,11 +8,14 @@ class UserBase(BaseModel):
     is_superuser: bool = False
     first_name: str = None
     last_name: str = None
+    role: str = "user"
+    documents: t.List[Document] = []
 
+    class Config:
+        arbitrary_types_allowed = True
 
 class UserOut(UserBase):
     pass
-
 
 class UserCreate(UserBase):
     password: str
@@ -20,26 +23,14 @@ class UserCreate(UserBase):
     class Config:
         orm_mode = True
 
-
 class UserEdit(UserBase):
     password: t.Optional[str] = None
 
     class Config:
         orm_mode = True
 
-
 class User(UserBase):
     id: int
 
     class Config:
         orm_mode = True
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    email: str = None
-    permissions: str = "user"
