@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.db.models_group import Base
+from app.db.session import Base
 
 class Tag(Base):
     __tablename__ = "tag"
