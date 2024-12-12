@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from jwt import PyJWTError
 
 from app.db import models, schemas, session
-from app.db.crud import get_user_by_email, create_user
+from app.db.crud.user_crud import get_user_by_email, create_user
 from app.core import security
 
 

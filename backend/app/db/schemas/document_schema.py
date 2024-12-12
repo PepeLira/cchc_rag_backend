@@ -1,20 +1,22 @@
 from pydantic import BaseModel
-from app.db.models.user import User
-from app.db.models.tag import Tag
-import typing as t
+from typing import TYPE_CHECKING, Optional, List
+
+if TYPE_CHECKING:
+    from app.db.schemas.user_schema import User
+    from app.db.schemas.tag_schema import Tag
 
 class DocumentBase(BaseModel):
     title: str
-    description: t.Optional[str] = None
-    document_type: t.Optional[str] = None
-    file_weight: t.Optional[int] = None
-    pages: t.Optional[int] = None
-    s3_url: t.Optional[str] = None
+    description: Optional[str] = None
+    document_type: Optional[str] = None
+    file_weight: Optional[int] = None
+    pages: Optional[int] = None
+    s3_url: Optional[str] = None
     user_id: int 
-    user: User
-    tags: t.List[Tag] = []
-    uploaded_at: t.Optional[str] = None
-    updated_at: t.Optional[str] = None
+    user: Optional['User']
+    tags: List['Tag'] = []
+    uploaded_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -39,3 +41,4 @@ class Document(DocumentBase):
 
     class Config:
         orm_mode = True
+        arbitrary_types_allowed = True

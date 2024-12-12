@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-import typing as t
-from app.db.models import Document
+from typing import TYPE_CHECKING, Optional, List
 
+if TYPE_CHECKING:
+    from app.db.schemas.document_schema import Document
 class UserBase(BaseModel):
     email: str
     is_active: bool = True
@@ -9,7 +10,7 @@ class UserBase(BaseModel):
     first_name: str = None
     last_name: str = None
     role: str = "user"
-    documents: t.List[Document] = []
+    documents: List['Document'] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -24,7 +25,7 @@ class UserCreate(UserBase):
         orm_mode = True
 
 class UserEdit(UserBase):
-    password: t.Optional[str] = None
+    password: Optional[str] = None
 
     class Config:
         orm_mode = True
