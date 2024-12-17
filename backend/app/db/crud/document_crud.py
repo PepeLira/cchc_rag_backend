@@ -2,22 +2,23 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import typing as t
 
+from .tag_crud import get_tags_by_id_list
 from app.db import models, schemas
 
-# Get a single document by ID
-def get_document(db: Session, document_id: int) -> schemas.Document:
+def get_document(db: Session, document_id: int) -> models.Document:
+    """Return the ORM instance of a document."""
     document = db.query(models.Document).filter(models.Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
-    return schemas.Document.from_orm(document)
+    return document
 
-# Get a list of documents with optional pagination
 def get_documents(db: Session, skip=0, limit=100) -> t.List[schemas.DocumentOut]:
+    """Returns a list of documents as schemas for read-only purposes."""
     documents = db.query(models.Document).offset(skip).limit(limit).all()
     return [schemas.DocumentOut.from_orm(doc) for doc in documents]
 
-# Create a new document
-def create_document(db: Session, document: schemas.DocumentCreate) -> schemas.Document:
+def create_document(db: Session, document: schemas.DocumentCreate) -> models.Document:
+    """Create a new document and return the ORM instance."""
     db_document = models.Document(
         title=document.title,
         description=document.description,
@@ -34,11 +35,9 @@ def create_document(db: Session, document: schemas.DocumentCreate) -> schemas.Do
     db.refresh(db_document)
     return db_document
 
-# Edit an existing document
-def edit_document(
-    db: Session, document_id: int, document: schemas.DocumentEdit
-) -> schemas.Document:
-    db_document = get_document(db, document_id)
+def edit_document(db: Session, document_id: int, document: schemas.DocumentEdit) -> models.Document:
+    """Edit an existing document and return the updated ORM instance."""
+    db_document = get_document(db, document_id)  # ORM instance
     if not db_document:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -51,12 +50,50 @@ def edit_document(
     db.refresh(db_document)
     return db_document
 
-# Delete a document
-def delete_document(db: Session, document_id: int) -> schemas.Document:
-    document = get_document(db, document_id)
+def delete_document(db: Session, document_id: int) -> models.Document:
+    """Delete a document and return the deleted ORM instance."""
+    document = get_document(db, document_id)  # ORM instance
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
     db.delete(document)
     db.commit()
+    return document
+
+def add_tags_to_document(db: Session, document_id: int, tags_ids: t.List[int]) -> models.Document:
+    """Add multiple tags to a document and return the updated ORM instance."""
+    document = get_document(db, document_id)  # ORM instance
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    tags = get_tags_by_id_list(db, tags_ids)  # Should return ORM instances of Tag
+    if not tags:
+        raise HTTPException(status_code=404, detail="No tags found for the given IDs")
+
+    for tag in tags:
+        if tag not in document.tags:
+            document.tags.append(tag)
+
+    db.commit()
+    db.refresh(document)
+    return document
+
+def remove_document_tag(db: Session, document_id: int, tags_ids: t.List[int]) -> models.Document:
+    """Remove multiple tags from a document and return the updated ORM instance."""
+    document = get_document(db, document_id)  # ORM instance
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    tags = get_tags_by_id_list(db, tags_ids)  # ORM instances of Tag
+    if not tags:
+        raise HTTPException(status_code=404, detail="No tags found for the given IDs")
+
+    for tag in tags:
+        if tag in document.tags:
+            document.tags.remove(tag)
+        else:
+            raise HTTPException(status_code=404, detail=f"Tag ID:{tag.id} not found")
+
+    db.commit()
+    db.refresh(document)
     return document

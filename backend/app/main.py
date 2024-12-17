@@ -3,6 +3,8 @@ from starlette.requests import Request
 import uvicorn
 
 from app.api.api_v1.routers.users import users_router
+from app.api.api_v1.routers.documents import documents_router
+from app.api.api_v1.routers.tags import tags_router
 from app.api.api_v1.routers.auth import auth_router
 from app.core import config
 from app.db.session import SessionLocal
@@ -43,7 +45,22 @@ app.include_router(
     tags=["users"],
     dependencies=[Depends(get_current_active_user)],
 )
+
 app.include_router(auth_router, prefix="/api", tags=["auth"])
+
+app.include_router(
+    documents_router,
+    prefix="/api/v1",
+    tags=["documents"],
+    dependencies=[Depends(get_current_active_user)],
+)
+
+app.include_router(
+    tags_router,
+    prefix="/api/v1",
+    tags=["tags"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8888)
