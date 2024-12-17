@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 
 class UserBase(BaseModel):
     email: str
@@ -8,7 +9,6 @@ class UserBase(BaseModel):
     first_name: str = None
     last_name: str = None
     role: str = "user"
-    documents: List[int] = []
 
 class DocumentBase(BaseModel):
     title: str
@@ -17,21 +17,14 @@ class DocumentBase(BaseModel):
     file_weight: Optional[int] = None
     pages: Optional[int] = None
     s3_url: Optional[str] = None
-    user_id: int 
-    user: Optional[int]
-    tags: List[int] = []
-    uploaded_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    user_id: int
+    uploaded_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 class TagBase(BaseModel):
     name: str
     description: Optional[str] = None
     is_active: bool = True
-    documents: List[int] = []
-
-class DocumentTagsBase(BaseModel):
-    document_id: int 
-    tag_id: int
 
 class Token(BaseModel):
     access_token: str
@@ -40,6 +33,10 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: str = None
     permissions: str = "user"
+
+class DocumentTags(BaseModel):
+    document_id: int
+    tag_ids : List[int]
 
 class User(UserBase):
     id: int
@@ -55,12 +52,7 @@ class Tag(TagBase):
 
 class Document(DocumentBase):
     id: int
-
-    class Config:
-        orm_mode = True
-
-class DocumentTags(DocumentTagsBase):
-    id: int
+    tags: List[Tag] 
 
     class Config:
         orm_mode = True
