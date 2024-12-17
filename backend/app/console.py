@@ -1,15 +1,16 @@
 from app.db.session import SessionLocal  # Replace with your actual session import
-from app.db import models  # Import your SQLAlchemy models
+from app.db import models, crud
 from IPython import embed
 
 # Initialize the session
-session = SessionLocal()
+db = SessionLocal()
 
 # Provide helpful startup context
 print("Interactive Application Console")
 print("Available objects:")
-print("- session: SQLAlchemy session instance")
-print("- Models: All your database models")
+print("- db: SQLAlchemy session instance")
+print("- models: All your database models")
+print("- crud: All your CRUD functions")
 
 # Start the interactive console
 if __name__ == "__main__":
@@ -18,5 +19,5 @@ if __name__ == "__main__":
         # Start interactive console
         embed()
     finally:
-        session.close()
+        db.close()
         print("Session closed")
