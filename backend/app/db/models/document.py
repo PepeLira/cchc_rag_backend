@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
+from app.db.models.document_tags import document_tags
 
 from app.db.session import Base
 
@@ -14,7 +15,7 @@ class Document(Base):
     s3_url = Column(String, index=True)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship("User", back_populates="documents")
-    tags = relationship("DocumentTags", back_populates="document")
+    tags = relationship("Tag", secondary=document_tags, back_populates="documents")    
     uploaded_at = Column(DateTime, index=True)
     updated_at = Column(DateTime, index=True)
     is_up_to_date = Column(Boolean, default=True)
