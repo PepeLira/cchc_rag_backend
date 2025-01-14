@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import typing as t
 
-from .tag_crud import get_tags_by_id_list
+from .tag_crud import get_tags_by_name_list
 from app.db import models, schemas
 
 def get_document(db: Session, document_id: int) -> models.Document:
@@ -60,13 +60,13 @@ def delete_document(db: Session, document_id: int) -> models.Document:
     db.commit()
     return document
 
-def add_tags_to_document(db: Session, document_id: int, tags_ids: t.List[int]) -> models.Document:
+def add_tags_to_document(db: Session, document_id: int, tags_names: t.List[str]) -> models.Document:
     """Add multiple tags to a document and return the updated ORM instance."""
     document = get_document(db, document_id)  # ORM instance
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    tags = get_tags_by_id_list(db, tags_ids)  # Should return ORM instances of Tag
+    tags = get_tags_by_name_list(db, tags_names)  # Should return ORM instances of Tag
     if not tags:
         raise HTTPException(status_code=404, detail="No tags found for the given IDs")
 
@@ -78,13 +78,13 @@ def add_tags_to_document(db: Session, document_id: int, tags_ids: t.List[int]) -
     db.refresh(document)
     return document
 
-def remove_document_tag(db: Session, document_id: int, tags_ids: t.List[int]) -> models.Document:
+def remove_document_tag(db: Session, document_id: int, tags_names: t.List[str]) -> models.Document:
     """Remove multiple tags from a document and return the updated ORM instance."""
     document = get_document(db, document_id)  # ORM instance
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    tags = get_tags_by_id_list(db, tags_ids)  # ORM instances of Tag
+    tags = get_tags_by_name_list(db, tags_names)  # ORM instances of Tag
     if not tags:
         raise HTTPException(status_code=404, detail="No tags found for the given IDs")
 
@@ -92,7 +92,7 @@ def remove_document_tag(db: Session, document_id: int, tags_ids: t.List[int]) ->
         if tag in document.tags:
             document.tags.remove(tag)
         else:
-            raise HTTPException(status_code=404, detail=f"Tag ID:{tag.id} not found")
+            raise HTTPException(status_code=404, detail=f"Tag Name:{tag.name} not found")
 
     db.commit()
     db.refresh(document)

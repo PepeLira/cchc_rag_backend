@@ -22,6 +22,10 @@ def get_tags_by_id_list(db: Session, tag_id_list: t.List[int]) -> t.List[models.
     # Returns a list of ORM Tag instances
     return db.query(models.Tag).filter(models.Tag.id.in_(tag_id_list)).all()
 
+def get_tags_by_name_list(db: Session, tag_name_list: t.List[str]) -> t.List[models.Tag]:
+    # Returns a list of ORM Tag instances
+    return db.query(models.Tag).filter(models.Tag.name.in_(tag_name_list)).all()
+
 def create_tag(db: Session, tag: schemas.TagCreate) -> models.Tag:
     db_tag = models.Tag(
         name=tag.name,

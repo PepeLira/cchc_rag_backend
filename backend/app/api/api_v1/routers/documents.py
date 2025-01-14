@@ -109,9 +109,9 @@ async def document_delete(
 async def document_add_tag(
     request: Request,
     document_id: int,
-    tag_ids: t.List[int] = Body(
+    tags_names: t.List[str] = Body(
         ...,
-        description="A list of tag IDs to associate with the specified document.",
+        description="A list of tag Names to associate with the specified document.",
         example=["int_tag_id_1", "int_tag_id_2", "int_tag_id_3"]
     ),
     db=Depends(get_db),
@@ -120,7 +120,7 @@ async def document_add_tag(
     """
     Add a tag to a document
     """
-    return add_tags_to_document(db, document_id, tag_ids) 
+    return add_tags_to_document(db, document_id, tags_names) 
 
 @r.post(
     "/documents/{document_id}/remove_tags",
@@ -130,9 +130,9 @@ async def document_add_tag(
 async def document_remove_tag(
     request: Request,
     document_id: int,
-    tags_ids: t.List[int] = Body(
+    tags_names: t.List[str] = Body(
         ...,
-        description="A list of tag IDs to associate with the specified document.",
+        description="A list of tag Names to associate with the specified document.",
         example=["int_tag_id_1", "int_tag_id_2", "int_tag_id_3"]
     ),
     db=Depends(get_db),
@@ -141,4 +141,4 @@ async def document_remove_tag(
     """
     Remove a tag from a document
     """
-    return remove_document_tag(db, document_id, tags_ids)
+    return remove_document_tag(db, document_id, tags_names)
