@@ -4,3 +4,6 @@ package-lock.json
 __pycache__/
 .env
 .docker
+small_norms_dataset/
+document_parser/output/
+parsed_docs/
