@@ -14,6 +14,8 @@ def main():
     documents_folder = Path("path/to/documents")
     if not documents_folder.exists():
         documents_folder = Path(TEST_PARSE_FOLDER)
+    if not documents_folder.exists():
+        raise Exception(f"Documents folder not found: {documents_folder}")
     
     base_output_dir = Path("parsed_docs")
     docling_integration = DoclingIntegration()
