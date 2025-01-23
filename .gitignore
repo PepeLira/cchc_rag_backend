@@ -7,3 +7,4 @@ __pycache__/
 small_norms_dataset/
 document_parser/output/
 parsed_docs/
+*.db
