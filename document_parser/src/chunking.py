@@ -1,5 +1,6 @@
 import logging
 from chonkie import SemanticChunker
+from chonkie import OpenAIEmbeddings
 
 _log = logging.getLogger(__name__)
 
@@ -21,7 +22,15 @@ class DocumentChunker:
             api_key=self.openai_api_key
         )
 
+        self._embedder = OpenAIEmbeddings(
+            api_key=self.openai_api_key,
+            model=self.embedding_model
+        )
+
     def chunk_and_embed(self, text: str):
         chunks = self._chunker.chunk(text)
         _log.info(f"Document chunked into {len(chunks)} segments.")
+        for chunk in chunks:
+            chunk.embedding = self._embedder.embed(chunk.text)
+        _log.info("Document chunks embedded.")
         return chunks

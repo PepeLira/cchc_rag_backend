@@ -39,12 +39,12 @@ class DoclingIntegration:
         conv_res = self.doc_converter.convert(input_pdf_path)
         output_dir.mkdir(parents=True, exist_ok=True)
         doc_filename = conv_res.input.file.stem
-        html_filename = output_dir / f"{doc_filename}.html"
+        markdown_filename = output_dir / f"{doc_filename}.markdown"
 
-        # Save HTML with externally referenced pictures
-        conv_res.document.save_as_html(html_filename, image_mode=ImageRefMode.REFERENCED)
+        # Save Markdown with externally referenced pictures
+        conv_res.document.save_as_markdown(markdown_filename, image_mode=ImageRefMode.REFERENCED)
 
-        return conv_res, html_filename
+        return conv_res, markdown_filename
     
     def get_page_count(self, path_or_stream: Union[BytesIO, Path]) -> int:
         doc_backend = DoclingParseV2DocumentBackend(in_doc=None, path_or_stream=path_or_stream)

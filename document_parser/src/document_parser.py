@@ -7,7 +7,7 @@ from .docling_integration import DoclingIntegration
 from .openai_client import OpenAIVisionClient
 from .chunking import DocumentChunker
 from .observer import IObserver
-from .document_models import DocumentObject
+from .controller import DocumentController
 
 _log = logging.getLogger(__name__)
 
@@ -21,13 +21,15 @@ class DocumentParser:
         chunk_size: int = 512,
         min_sentences: int = 1,
         chunk_flag: bool = False,
-        describe_flag: bool = False
+        describe_flag: bool = False,
+        controller: DocumentController = None
     ):
         self.observers = observers if observers is not None else []
         self.docling_integration = docling_integration
         self.openai_api_key = openai_api_key
         self.chunk_flag = chunk_flag
         self.describe_flag = describe_flag
+        self.controller = controller
 
         # Build our chunker client
         self.chunker = DocumentChunker(
@@ -53,83 +55,89 @@ class DocumentParser:
         document_paths = self._load_document_paths(documents_folder)
 
         for doc_path in document_paths:
-            doc_id = str(uuid.uuid4())  # or any other unique ID
+            doc_path_id = str(uuid.uuid4())  # or any other unique ID
             title = doc_path.stem
-            doc_output_dir = base_output_dir / f"{title}_{doc_id}"
+            doc_output_dir = base_output_dir / f"{title}_{doc_path_id}"
 
             # Initialize DocumentObject
-            doc_obj = DocumentObject(
-                doc_id=doc_id,
+            doc_obj = self.controller.create_document(
                 title=title,
-                doc_path=doc_path,
-                output_dir=doc_output_dir
+                doc_path=str(doc_path),
+                output_dir=str(doc_output_dir),
+                doc_hash=None
             )
 
-            # 1. Parse PDF -> HTML (with references to images)
-            conversion_result, html_path = self.docling_integration.parse_pdf(
+            # [!] Parse PDF -> markdown (with references to images)
+            conversion_result, markdown_path = self.docling_integration.parse_pdf(
                 doc_path, 
                 doc_output_dir
             )
-            doc_obj.html_path = html_path
-            doc_obj.page_number = len(conversion_result.pages)
 
-            self._notify_observers("PDF_PARSED", {"doc_id": doc_id, "html_path": str(html_path)})
+            doc_obj.markdown_path = str(markdown_path)
+            markdown_file_name = markdown_path.stem
+            doc_obj.images_path = str(doc_output_dir / f"{markdown_file_name}_artifacts")
+            doc_obj.page_count = len(conversion_result.pages)
+            doc_obj.doc_hash = conversion_result.document.origin.binary_hash # This is the hash of the binary content of the document
 
-            # 2. Look for image references in the HTML
-            image_refs = self._extract_image_references(html_path, doc_output_dir)
-            doc_obj.image_references = image_refs
-
-            self._notify_observers("IMAGE_REFERENCES_FOUND", {"doc_id": doc_id, "count": len(image_refs)})
+            self._notify_observers("PDF_PARSED", {"doc_path_id": doc_path_id, "markdown_path": str(markdown_path)})
 
             if self.describe_flag:
-                # 3. Use the OpenAI Vision endpoint to describe each image
-                described_html_path = doc_output_dir / f"{title}_described_images.html"
-                described_html_content = self._describe_images_in_html(html_path, image_refs)
-                with open(described_html_path, "w", encoding="utf-8") as f:
-                    f.write(described_html_content)
-                doc_obj.described_html_path = described_html_path
+                # TODO: "Implement image description"
+                # [!] Use the OpenAI Vision endpoint to describe each image
+                # described_markdown_path = doc_output_dir / f"{title}_described_images.markdown"
+                # described_markdown_content = self._describe_images_in_markdown(markdown_path)
+                # with open(described_markdown_path, "w", encoding="utf-8") as f:
+                #     f.write(described_markdown_content)
+                # doc_obj.described_markdown_path = described_markdown_path
+                pass
 
-                self._notify_observers("IMAGES_DESCRIBED", {"doc_id": doc_id, "described_html_path": str(described_html_path)})
+                self._notify_observers("IMAGES_DESCRIBED", {"doc_path_id": doc_path_id, "described_markdown_path": str("Here is the path")})
 
             if self.chunk_flag:
-                # 4. Chunk the text from the described HTML
-                with open(described_html_path, "r", encoding="utf-8") as f:
-                    html_content = f.read()
-                # You might want a more sophisticated approach to extract text from HTML.
+                # [!] Chunk the text from the described markdown
+                with open(markdown_path, "r", encoding="utf-8") as f:
+                    markdown_content = f.read()
+                # You might want a more sophisticated approach to extract text from markdown.
                 # Here, we do a simple removal of tags:
-                text_content = self._strip_html_tags(html_content)
+                text_content = self._strip_markdown_tags(markdown_content)
 
                 chunks = self.chunker.chunk_and_embed(text_content)
-                for chunk in chunks:
-                    doc_obj.add_chunk(chunk)
-                    # if chunker directly stores embeddings in chunk, this step is optional
-                    # otherwise, doc_obj.add_embedding(chunk.embedding)
-            
-                self._notify_observers("DOCUMENT_CHUNKED", {"doc_id": doc_id, "chunks_count": len(chunks)})
+                chunks_objects = []
 
-            # Done, store doc_obj
+                for chunk in chunks:
+                    chunk_o = self.controller.create_chunk(
+                        document_id=doc_obj.id,
+                        text = chunk.text,
+                        embedding = chunk.embedding
+                    )
+                    chunks_objects.append(chunk_o)
+                doc_obj.chunks = chunks_objects
+
+                self._notify_observers("DOCUMENT_CHUNKED", {"doc_path_id": doc_path_id, "chunks_count": len(chunks)})
+            
+            self.controller.commit(doc_obj) # Done, store doc_obj in the database
             document_objects.append(doc_obj)
         
         return document_objects
 
-    def _strip_html_tags(self, html_content: str) -> str:
+    def _strip_markdown_tags(self, markdown_content: str) -> str:
         """
-        Very naive HTML to text. 
+        Very naive markdown to text. 
         Improve with a parser like BeautifulSoup for real use.
         """
-        text = re.sub('<[^<]+?>', '', html_content)
+        text = re.sub('<[^<]+?>', '', markdown_content)
         return text
 
-    def _extract_image_references(self, html_path: Path, doc_output_dir: Path):
+    def _extract_image_references(self, markdown_path: Path, doc_output_dir: Path):
         """
-        Scans the HTML for image references and returns a list of image paths or URLs.
-        By default docling saves images in a subfolder like <html_filename>+artifacts.
+        Scans the markdown for image references and returns a list of image paths or URLs.
+        By default docling saves images in a subfolder like <markdown_filename>+artifacts.
         We'll assume local references, but you may have absolute or relative URLs.
         """
-        if not html_path.exists():
+        if not markdown_path.exists():
             return []
 
-        with open(html_path, 'r', encoding='utf-8') as f:
+        with open(markdown_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         # A simple regex to get <img src="...">
@@ -137,18 +145,18 @@ class DocumentParser:
         # Convert them to full path references
         resolved_paths = []
         for p in image_paths:
-            # If docling is storing them in "html_filename+artifacts", handle that
-            # doc_output_dir is already the directory with the HTML and images
+            # If docling is storing them in "markdown_filename+artifacts", handle that
+            # doc_output_dir is already the directory with the markdown and images
             resolved_paths.append((doc_output_dir / p).resolve())
         return resolved_paths
 
-    def _describe_images_in_html(self, html_path: Path, image_refs):
+    def _describe_images_in_markdown(self, markdown_path: Path, image_refs):
         """
-        Loads the HTML file, replaces each <img src="..."> with a figure or alt text
+        Loads the markdown file, replaces each <img src="..."> with a figure or alt text
         containing the description from the OpenAI Vision endpoint.
         """
-        with open(html_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
+        with open(markdown_path, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
 
         for img_path in image_refs:
             if img_path.exists():
@@ -160,6 +168,6 @@ class DocumentParser:
                 # Let's do a naive approach: <img src="..." alt="{description}">
                 pattern = rf'<img\s+[^>]*src="{re.escape(str(img_path.name))}"'
                 replacement = fr'<img src="{img_path.name}" alt="{description}"'
-                html_content = re.sub(pattern, replacement, html_content)
+                markdown_content = re.sub(pattern, replacement, markdown_content)
 
-        return html_content
+        return markdown_content
