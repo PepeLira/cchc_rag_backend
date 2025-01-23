@@ -33,7 +33,7 @@ async def login(
         expires_delta=access_token_expires,
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "expires_in": access_token_expires.total_seconds()}
 
 
 @r.post("/signup")

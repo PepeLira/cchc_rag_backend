@@ -11,13 +11,13 @@ class UserBase(BaseModel):
     role: str = "user"
 
 class DocumentBase(BaseModel):
+    doc_hash: str
     title: str
     description: Optional[str] = None
     document_type: Optional[str] = None
     file_weight: Optional[int] = None
     pages: Optional[int] = None
     s3_url: Optional[str] = None
-    user_id: int
     uploaded_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

@@ -11,6 +11,7 @@ class DocumentOut(DocumentBase):
 
 class DocumentCreate(DocumentBase):
     pass
+    user_email : str
 
     class Config:
         orm_mode = True

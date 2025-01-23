@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.db.crud.document_crud import (
     get_documents,
     get_document,
+    get_document_by_hash,
     create_document,
     delete_document,
     edit_document,
@@ -51,6 +52,42 @@ async def document_details(
     """
     document = get_document(db, document_id)
     return document
+
+@r.get(
+    "/document/hash/{doc_hash}",
+    response_model=Document,
+    response_model_exclude_none=True,
+)
+async def document_hash_exist(
+    request: Request,
+    doc_hash: str,
+    db=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Check if a document exists by hash
+    """
+    document = get_document_by_hash(db, doc_hash)
+    if document:
+        return {'exists': True }
+
+@r.put(
+    "/document/hash/{doc_hash}",
+    response_model=Document,
+    response_model_exclude_none=True,
+)
+async def document_edit_by_hash(
+    request: Request,
+    doc_hash: str,
+    document: DocumentEdit,
+    db=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Edit a document by hash
+    """
+    document = get_document_by_hash(db, doc_hash)
+    return edit_document(db, document.id, document)
 
 @r.post(
     "/documents", 

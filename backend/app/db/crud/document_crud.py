@@ -12,6 +12,13 @@ def get_document(db: Session, document_id: int) -> models.Document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
 
+def get_document_by_hash(db: Session, doc_hash: str) -> models.Document:
+    """Return the ORM instance of a document."""
+    document = db.query(models.Document).filter(models.Document.doc_hash == doc_hash).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return document
+
 def get_documents(db: Session, skip=0, limit=100) -> t.List[schemas.DocumentOut]:
     """Returns a list of documents as schemas for read-only purposes."""
     documents = db.query(models.Document).offset(skip).limit(limit).all()
@@ -19,14 +26,16 @@ def get_documents(db: Session, skip=0, limit=100) -> t.List[schemas.DocumentOut]
 
 def create_document(db: Session, document: schemas.DocumentCreate) -> models.Document:
     """Create a new document and return the ORM instance."""
+    user_id = db.query(models.User).filter(models.User.email == document.user_name).first().id
     db_document = models.Document(
+        doc_hash=document.doc_hash,
         title=document.title,
         description=document.description,
         document_type=document.document_type,
         file_weight=document.file_weight,
         pages=document.pages,
         s3_url=document.s3_url,
-        user_id=document.user_id,
+        user_id=user_id,
         uploaded_at=document.uploaded_at,
         updated_at=document.updated_at,
     )
