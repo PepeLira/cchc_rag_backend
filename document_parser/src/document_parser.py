@@ -22,7 +22,8 @@ class DocumentParser:
         min_sentences: int = 1,
         chunk_flag: bool = False,
         describe_flag: bool = False,
-        controller: DocumentController = None
+        controller: DocumentController = None,
+        base_output_dir: Path = Path("parsed_docs")
     ):
         self.observers = observers if observers is not None else []
         self.docling_integration = docling_integration

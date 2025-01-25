@@ -161,7 +161,13 @@ class DocumentController:
 		Retrieve a Chunk by its primary key ID.
 		"""
 		return self.db_session.query(Chunk).filter(Chunk.id == chunk_id).one_or_none()
-
+	
+	def get_newest_documents(self) -> List[Document]:
+		"""
+		Return a list of the documents with is_uploaded = 0.
+		"""
+		return self.db_session.query(Document).filter(Document.is_uploaded == 0).all()
+		
 	def list_documents(self) -> List[Document]:
 		"""
 		List all documents.
