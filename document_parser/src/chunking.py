@@ -26,6 +26,7 @@ class DocumentChunker:
             api_key=self.openai_api_key,
             model=self.embedding_model
         )
+        self.embedding_size = self._embedder._dimension
 
     def chunk_and_embed(self, text: str):
         chunks = self._chunker.chunk(text)
@@ -34,3 +35,8 @@ class DocumentChunker:
             chunk.embedding = self._embedder.embed(chunk.text)
         _log.info("Document chunks embedded.")
         return chunks
+    
+    def embed(self, text: str):
+        embedded_text = self._embedder.embed(text)
+        _log.info("Text embedded.")
+        return embedded_text

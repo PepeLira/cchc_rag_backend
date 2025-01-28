@@ -19,6 +19,8 @@ class DocumentCreate(DocumentBase):
 
 class DocumentEdit(DocumentBase):
     pass
+    user_email : str
+    doc_hash : str
 
     class Config:
         orm_mode = True
