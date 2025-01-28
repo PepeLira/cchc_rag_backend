@@ -55,7 +55,6 @@ async def document_details(
 
 @r.get(
     "/document/hash/{doc_hash}",
-    response_model=Document,
     response_model_exclude_none=True,
 )
 async def document_hash_exist(
@@ -86,8 +85,8 @@ async def document_edit_by_hash(
     """
     Edit a document by hash
     """
-    document = get_document_by_hash(db, doc_hash)
-    return edit_document(db, document.id, document)
+    document_db = get_document_by_hash(db, doc_hash)
+    return edit_document(db, document_db.id, document)
 
 @r.post(
     "/documents", 

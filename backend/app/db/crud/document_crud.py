@@ -26,7 +26,7 @@ def get_documents(db: Session, skip=0, limit=100) -> t.List[schemas.DocumentOut]
 
 def create_document(db: Session, document: schemas.DocumentCreate) -> models.Document:
     """Create a new document and return the ORM instance."""
-    user_id = db.query(models.User).filter(models.User.email == document.user_name).first().id
+    user_id = db.query(models.User).filter(models.User.email == document.user_email).first().id
     db_document = models.Document(
         doc_hash=document.doc_hash,
         title=document.title,
