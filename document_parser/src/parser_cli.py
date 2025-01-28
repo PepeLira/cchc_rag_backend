@@ -13,6 +13,7 @@ from .observer import LoggingObserver
 from .validation_events import ValidationEvents
 from .docling_integration import DoclingIntegration
 from .document_parser import DocumentParser
+from .database_sync_service import DatabaseSyncService
 
 from .config import (
     OPENAI_API_KEY,
@@ -38,10 +39,12 @@ def resolve_documents_folder(folder_str: str | None) -> Path:
 def run(documents_folder: str = None, base_output_dir: str = None) -> None:
     """
     Launches an IPython CLI that provides:
-      - A session with SQLAlchemy
-      - A DocumentController instance
-      - A configured DocumentParser instance
-      - A set of instructions for parsing documents
+        - A session with SQLAlchemy
+        - A DocumentController instance
+        - A configured DocumentParser instance
+        - A set of instructions for parsing documents
+        - A set of instructions for changing the documents folder interactively
+        - A DatabaseSyncService instance for syncing local documents with the backend
 
     :param documents_folder: Path to the folder containing documents to parse.
     :param base_output_dir:  Path to the output folder for parsed documents and logs.
@@ -76,8 +79,7 @@ def run(documents_folder: str = None, base_output_dir: str = None) -> None:
         chunk_threshold=0.5,
         chunk_size=512,
         min_sentences=1,
-        controller=controller,
-        chunk_flag=False
+        controller=controller
     )
 
     # --- Provide a helper function to change folder interactively ---
@@ -92,11 +94,15 @@ def run(documents_folder: str = None, base_output_dir: str = None) -> None:
         local_ns["documents_folder"] = path_obj
         print(f"documents_folder changed to: {path_obj.resolve()}")
 
-    def parse_documents():
+    def parse_documents(
+        chunk: bool = False, describe: bool = False, reprocess: bool = False
+    ):
         """
         Parses the documents in the current documents_folder.
         """
-        return parser.parse_documents(doc_folder, base_output_dir)
+        return parser.parse_documents(
+            doc_folder, base_output_dir, chunk, describe, reprocess
+        )
 
     # --- Prepare Local Namespace for IPython ---
     local_ns = {
@@ -109,6 +115,7 @@ def run(documents_folder: str = None, base_output_dir: str = None) -> None:
         "documents_folder": doc_folder,   # Initially set
         "base_output_dir": base_output_dir,
         "set_documents_folder": set_documents_folder,  # Our new function
+        "backend_sync": DatabaseSyncService(controller),
     }
 
     # --- Print Usage Instructions ---
@@ -120,6 +127,7 @@ def run(documents_folder: str = None, base_output_dir: str = None) -> None:
     print(" - documents_folder:    Current path to documents to parse")
     print(" - base_output_dir:     Output path for logs & parsed docs")
     print(" - set_documents_folder(new_folder): changes 'documents_folder' after checks\n")
+    print(" - backend_sync:        DatabaseSyncService(controller) instance for syncing\n")
     print("Commands you can use inside IPython:")
     print("  1) session.query(Document).all()")
     print("  2) parser.parse_documents(documents_folder, base_output_dir)")
