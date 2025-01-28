@@ -95,7 +95,7 @@ And fill in `upgrade` and `downgrade` methods. For more information see
 [Alembic's official documentation](https://alembic.sqlalchemy.org/en/latest/tutorial.html#create-a-migration-script).
 
 ## Backend Session Console
-To review the data model objects we can interact with the sqlalchemy session using the `console.py` script.
+To review the data model objects we can interact with the sqlalchemy session (db) using the `console.py` script.
 
 Start a backend shell:
 ```
@@ -109,7 +109,7 @@ python -m app.console
 
 In the console we can call for the models:
 ```
-session.query(models.User).all()
+db.query(models.User).all()
 ```
 
 ## Testing
