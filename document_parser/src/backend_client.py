@@ -80,7 +80,7 @@ class BackendClient(Session):
         Returns the JSON response as a Python dictionary (or list).
         Raises HTTPError if status code != 201.
         """
-        endpoint = "/document"
+        endpoint = "/documents"
         response = self.post(endpoint, json=doc_data)
         response.raise_for_status()
         return response.json()
