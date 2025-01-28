@@ -41,7 +41,9 @@ class Document(Base):
     local_update = Column(Integer, nullable=False, default=0)
 
     # One-to-many: Document -> Chunk
-    chunks = relationship("Chunk", back_populates="document", cascade="all, delete-orphan")
+    chunks = relationship(
+        "Chunk", back_populates="document", cascade="all, delete-orphan"
+    )
 
     # Many-to-many: Document -> Tag
     tags = relationship("Tag", secondary=document_tags, back_populates="documents")

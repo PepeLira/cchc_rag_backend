@@ -23,7 +23,9 @@ class ValidationEvents:
                 target.local_update = 1
                 self._notify_observers(
                     "ValidationEvent",
-                    {"message": f"Document '{target.title}' already on backend. Marked local_update=1."}
+                    {
+                        "message": f"Document '{target.title}' already on backend. Marked local_update=1."
+                    },
                 )
 
     def _notify_observers(self, event_name, event_data):
